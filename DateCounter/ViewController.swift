@@ -10,6 +10,7 @@ import UIKit
 
 class ViewController: UIViewController {
 
+    
     @IBOutlet weak var CurrentDateLabel: UILabel!
     @IBOutlet weak var ChosenDateLabel: UILabel!
     @IBOutlet weak var DatePicker: UIDatePicker!
@@ -18,6 +19,9 @@ class ViewController: UIViewController {
     var currentDate: NSDate!
     var dateFormatter: NSDateFormatter!
     
+    @IBAction func editingDidBegin(sender: AnyObject) {
+        self.DatePicker.hidden = true
+    }
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib
@@ -25,9 +29,8 @@ class ViewController: UIViewController {
         dateFormatter.dateFormat = "yyyy-MM-dd"
         
         self.addDoneButtonOnKeyboard()
-
-        
         self.upDate(DatePicker)
+        self.CurrentDateLabel.text = dateFormatter.stringFromDate(NSDate())
     }
 
     override func didReceiveMemoryWarning() {
@@ -36,13 +39,12 @@ class ViewController: UIViewController {
     }
 
     @IBAction func upDate(sender: UIDatePicker) {
-        let incommingDate = sender.date.resetTime()
-        
-        upDateRelatedViews(incommingDate)
-        
-        let difference = NSCalendar.currentCalendar().components(NSCalendarUnit.Day, fromDate: currentDate, toDate: incommingDate, options: []).day
-        updateDiff(difference)
-        
+        self.updateResult()
+    }
+    
+    @IBAction func setToday(sender: AnyObject) {
+        self.DatePicker.date = NSDate();
+        self.updateResult()
     }
     
     func addDoneButtonOnKeyboard()
@@ -70,9 +72,10 @@ class ViewController: UIViewController {
     
     func doneButtonAction()
     {
-        self.upDateFromDiff()
+        self.updateResult()
         self.diffTextView.resignFirstResponder()
         self.diffTextView.resignFirstResponder()
+        self.DatePicker.hidden = false
     }
     
     func minusClick(){
@@ -85,30 +88,25 @@ class ViewController: UIViewController {
         
     }
     
-    func upDateRelatedViews(newDate:NSDate){
-        currentDate = NSDate().resetTime()
-        let currentDateStr = dateFormatter.stringFromDate(currentDate)
-        CurrentDateLabel.text = currentDateStr
-        let strDate = dateFormatter.stringFromDate(newDate)
-        ChosenDateLabel.text = strDate
-        
-        DatePicker.date = newDate;
-    }
-    
-    func upDateFromDiff(){
-        let value:String = self.diffTextView.text != nil ? self.diffTextView.text! : "0"
-        let diff:Int = Int(value) != nil ? Int(value)!: 0
-        let newChosenDate:NSDate = NSDate().resetTime().dateByAddingTimeInterval(60*60*24*Double(diff))
-        upDateRelatedViews(newChosenDate)
-        updateDiff(diff)
-        
-    }
-    
     func updateDiff(diff:Int){
         self.diffTextView.text = String(diff)
     }
-
-
+    
+    func updateResult(){
+        let result = self.addDiffToDate(self.DatePicker.date, diff: Double(self.getDiff()))
+        updateDiff(self.getDiff())
+        self.ChosenDateLabel.text = dateFormatter.stringFromDate(result)
+    }
+    
+    func getDiff() -> Int{
+      let value:String = self.diffTextView.text != nil ? self.diffTextView.text! : "0"
+      return Int(value) != nil ? Int(value)!: 0
+    }
+    
+    
+    func addDiffToDate(date:NSDate, diff:Double) -> NSDate{
+        return date.resetTime().dateByAddingTimeInterval(60*60*24*diff)
+    }
 }
 
 extension NSDate {
